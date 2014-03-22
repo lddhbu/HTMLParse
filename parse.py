@@ -1,11 +1,12 @@
 #coding=utf-8
 from tag import Tag, Attribute, Content
-from util import my_split
 from tag import HALF_TAG, NOTE_TAG
-#  没有关闭标记的标签
+from util import my_split
+
 
 class ParseHTML(object):
     PUSH_SYMBOl = ('"', "'", '<', '>')
+
     def __init__(self, path):
         self.path = path
         self.root = Tag('root')
@@ -19,18 +20,21 @@ class ParseHTML(object):
     def	_get_html(self):
         with open(self.path) as f:
             self.html = f.read()
-            print self.html
 
     def _is_half_tag(self, start, end):
-        while self.html[start] in '</> \n' and start < end: start += 1
+        while self.html[start] in '</> \n' and start < end:
+            start += 1
         index = start
-        while self.html[index] not in '</> \n' and index < end: index += 1
+        while self.html[index] not in '</> \n' and index < end:
+            index += 1
         return self.html[start: index] in HALF_TAG
 
     def _is_note_tag(self, start, end):
-        while self.html[start] in '</> \n' and start < end: start += 1
+        while self.html[start] in '</> \n' and start < end:
+            start += 1
         index = start
-        while self.html[index] not in '</> \n' and index < end: index += 1
+        while self.html[index] not in '</> \n' and index < end:
+            index += 1
         return self.html[start: index] in NOTE_TAG
 
     def _on_create_tag(self, start, end):
@@ -68,7 +72,7 @@ class ParseHTML(object):
             if i != '"' and quotation_flag:
                 continue
             elif i == '"':
-                 quotation_flag = not quotation_flag
+                quotation_flag = not quotation_flag
             if i == '<' and self.symbol_stack[-1][1] != '<':
                 if self.symbol_stack[-1][1] == '$':  # 内容的结束
                     new_content = self._on_content(self.symbol_stack[-1][0], index)
@@ -87,7 +91,8 @@ class ParseHTML(object):
                     self.tag_stack[-1].append(new_tag)
                     continue
                 if self._is_note_tag(self.symbol_stack[-1][0], index):  # 注释标记
-                    while self.symbol_stack.pop()[1] != '<': pass
+                    while self.symbol_stack.pop()[1] != '<':
+                        pass
                 if self.symbol_stack[-1][1] == '<':
                     new_tag = self._on_create_tag(self.symbol_stack[-1][0], index)
                     self.symbol_stack.pop()
@@ -110,10 +115,11 @@ class ParseHTML(object):
         ret = ''.join(self.root.render())
         print ret
 
+
 def main():
     parse = ParseHTML('asd.html')
     parse.render()
 
+
 if __name__ == "__main__":
     main()
-

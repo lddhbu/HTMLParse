@@ -4,6 +4,68 @@ HALF_TAG = ('br', 'hr', 'input', 'img', 'meta', 'spacer', 'link', 'frame', 'base
 NOTE_TAG = ('!DOCTYPE', '!--')  # 注释标记
 
 
+class Render(object):
+    def br_render(self, tag):
+        return '\n%s\n' % ('-' * 80)
+
+    def ul_render(self, tag):
+        return '\n'
+
+    def li_render(self, tag):
+        num = 0
+        p = tag.parent
+        while p.name in ('ul', 'li'):
+            if p.name == 'ul':
+                num += 4
+            p = p.parent
+        return '\n%s●  ' % (' ' * num)
+
+    def input_render(self, tag):
+        return ''
+
+    def nav_render(self, tag):
+        return ''
+
+    def h1_render(self, tag):
+        return ''
+
+    def h2_render(self, tag):
+        return ''
+
+    def h3_render(self, tag):
+        return ''
+
+    def h4_render(self, tag):
+        return ''
+
+    def h5_render(self, tag):
+        return ''
+
+    def h6_render(self, tag):
+        return ''
+
+    def h7_render(self, tag):
+        return ''
+
+    def img_render(self, tag):
+        return '\n\n\nThis is picture!'
+
+    def p_render(self, tag):
+        return '\n\n'
+
+    def div_render(self, tag):
+        first = tag.first_child()
+        if not first or first.name != 'div':
+            return '\n'
+        return ''
+
+    def other_render(self, tag):
+        return ''
+
+
+_render = Render()
+
+
 class BaseTag(object):
     def __init__(self, name, attrs=[], parent=None, next=None, previous=None, content=None):
         self.name = name
@@ -13,12 +75,19 @@ class BaseTag(object):
         self.next = next  # 后一标签
         self.attrs = attrs  # 属性
         self.is_half_tag = self.name in (HALF_TAG)
+        self.is_content = False
 
     def set_parent(self, parent):
         self.parent = parent
 
+    def first_child(self):
+        if len(self.childs) > 0:
+            return self.childs[0]
+        return None
+
     def render(self):
         pass
+
 
 class Tag(BaseTag):
     """标签"""
@@ -50,23 +119,15 @@ class Tag(BaseTag):
     def append(self, child):
         self.insert(len(self.childs), child)
 
-    def prin(self):
-        print '<%s' % self.name
-        for i in self.attrs:
-            print ' %s=%s' % (i.name, i.value)
-        if self.is_half_tag:
-            print ' />'
-        else:
-            print '>'
-            for i in self.childs:
-                i.prin()  # 递归子tag
-            print '</ %s>' % self.name
-
     def render(self):
-        ret = []
+        if self.name == 'title':
+            return ['']
+        func = getattr(_render, '%s_render' % self.name, _render.other_render)
+        ret = [func(self)]
         for i in self.childs:
             ret.extend(i.render())
         return ret
+
 
 class Attribute(object):
     """属性"""
@@ -74,9 +135,12 @@ class Attribute(object):
         self.name = name
         self.value = value
 
+
 class Content(BaseTag):
     """内容"""
+    def __init__(self, *args, **kwargs):
+        super(Content, self).__init__(*args, **kwargs)
+        self.is_content = True
+
     def render(self):
-        return [self.name]
-
-
+        return [self.name.replace('&amp;', '&')]
